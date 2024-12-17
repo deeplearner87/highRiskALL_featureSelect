@@ -104,7 +104,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
 
     #Loading Transcriptomics data
     file_url = "https://drive.google.com/uc?id=1QmLl_ohlBm10Pd-kPy14POp39QbFrOLN"
-    Read the CSV file from Google Drive
+    #Read the CSV file from Google Drive
     rna = pd.read_csv(file_url, index_col=0)
 
     #rna = pd.read_csv('Data/High-Risk-ALL_rna_preprocessed_protein_coding_genes.csv', index_col=0)
