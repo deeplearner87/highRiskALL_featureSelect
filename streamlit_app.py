@@ -88,9 +88,9 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     T_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe'] == 'T-ALL', ['Sample ID Submitted', 'Sample ID Proteomics', 'Diagnosis/Relapse']]
     
     #Loading the protein data
-    file_url = "https://drive.google.com/uc?id=1zOfgyP2ks6BnQRXttYfb7gn7qthooHPt"
+    #file_url = "https://drive.google.com/uc?id=1zOfgyP2ks6BnQRXttYfb7gn7qthooHPt"
     #Read the CSV file from Google Drive
-    protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
+    #protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
     protein = protein.iloc[5:,:]
@@ -103,9 +103,9 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Sample ID Proteomics'])].T
 
     #Loading Transcriptomics data
-    file_url = "https://drive.google.com/uc?id=1QmLl_ohlBm10Pd-kPy14POp39QbFrOLN"
+    #file_url = "https://drive.google.com/uc?id=1QmLl_ohlBm10Pd-kPy14POp39QbFrOLN"
     #Read the CSV file from Google Drive
-    rna = pd.read_csv(file_url, index_col=0)
+    #rna = pd.read_csv(file_url, index_col=0)
 
     #rna = pd.read_csv(dir+'High-Risk-ALL_rna_preprocessed_protein_coding_genes.csv', index_col=0)
 
@@ -132,9 +132,9 @@ def preSelectFeatures(X, y, threshold, exp_name):
 
 def protein2gene(df, cols):
     #Loading the protein data
-    file_url = "https://drive.google.com/uc?id=1zOfgyP2ks6BnQRXttYfb7gn7qthooHPt"
+    #file_url = "https://drive.google.com/uc?id=1zOfgyP2ks6BnQRXttYfb7gn7qthooHPt"
     #Read the CSV file from Google Drive
-    protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
+    #protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
     protein = protein.iloc[5:,:]
@@ -338,6 +338,19 @@ def classify(data, drug_data, exp_name, classifiers, num_features, threshold, om
     return selFeatures
 
 omics_type = st.selectbox('Select omics-type: ', ['Proteomics', 'Transcriptomics'])
+if omics_type=='Transcriptomics':
+    uploaded_file = st.file_uploader("Upload transcriptomics data")
+    if uploaded_file:
+        rna = pd.read_csv(uploaded_file, index_col=0)
+        st.write("Uploaded transcriptomics data:")
+        st.dataframe(user_data)
+elif omics_type=='Proteomics':
+    uploaded_file = st.file_uploader("Upload proteomics data")
+    if uploaded_file:
+        protein = pd.read_csv(uploaded_file, header=0, sep='\t', low_memory=False)
+        st.write("Uploaded proteomics data:")
+        st.dataframe(user_data)
+    
 cell_type = st.selectbox('Select cell-type: ', ['T-ALL', 'B-ALL'])
 drugs_of_interest = ['Idarubicin', 'Dasatinib', 'Ponatinib', 'Venetoclax', 'Navitoclax', 'Doxorubicin', 'Birinapant', 'Bortezomib', 'CB-103', 'Dexamethasone', 'Cytarabine', 'Etoposide', 'Methotrexate', 'Selinexor', 'Vincristine', 'Nilotinib', 'Temsirolimus', 'Bosutinib', 'Panobinostat', 'Trametinib', 'Ruxolitinib', 'Dinaciclib', 'A1331852', 'S-63845', 'Nelarabine']
 drugOfInterest = st.selectbox('Select drug', options=[opt.strip() for opt in drugs_of_interest])
