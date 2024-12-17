@@ -90,7 +90,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #Loading the protein data
     file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ"
     #Read the CSV file from Nextcloud
-    #protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
+    protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
     #protein = protein.iloc[5:,:]
