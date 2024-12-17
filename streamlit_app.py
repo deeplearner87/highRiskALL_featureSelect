@@ -88,8 +88,8 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     T_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe'] == 'T-ALL', ['Sample ID Submitted', 'Sample ID Proteomics', 'Diagnosis/Relapse']]
     
     #Loading the protein data
-    #file_url = "https://drive.google.com/uc?id=1zOfgyP2ks6BnQRXttYfb7gn7qthooHPt"
-    #Read the CSV file from Google Drive
+    file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ"
+    #Read the CSV file from Nextcloud
     #protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
@@ -103,9 +103,9 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Sample ID Proteomics'])].T
 
     #Loading Transcriptomics data
-    #file_url = "https://drive.google.com/uc?id=1QmLl_ohlBm10Pd-kPy14POp39QbFrOLN"
-    #Read the CSV file from Google Drive
-    #rna = pd.read_csv(file_url, index_col=0)
+    file_url = "https://hub.dkfz.de/s/Z8je56exzwq44sQ"
+    #Read the CSV file from Nextcloud
+    rna = pd.read_csv(file_url, index_col=0)
 
     #rna = pd.read_csv(dir+'High-Risk-ALL_rna_preprocessed_protein_coding_genes.csv', index_col=0)
 
@@ -132,12 +132,12 @@ def preSelectFeatures(X, y, threshold, exp_name):
 
 def protein2gene(df, cols):
     #Loading the protein data
-    #file_url = "https://drive.google.com/uc?id=1zOfgyP2ks6BnQRXttYfb7gn7qthooHPt"
-    #Read the CSV file from Google Drive
-    #protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
+    file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ"
+    #Read the CSV file from NextCloud
+    protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
-    #protein = protein.iloc[5:,:]
+    protein = protein.iloc[5:,:]
     protein_copy = protein.copy()
     protein.index = protein['Protein ID']
     protein = protein.iloc[:,0:127]
@@ -338,19 +338,20 @@ def classify(data, drug_data, exp_name, classifiers, num_features, threshold, om
     return selFeatures
 
 omics_type = st.selectbox('Select omics-type: ', ['Proteomics', 'Transcriptomics'])
-if omics_type=='Transcriptomics':
-    uploaded_file = st.file_uploader("Upload transcriptomics data")
-    if uploaded_file:
-        rna = pd.read_csv(uploaded_file, index_col=0)
-        st.write("Uploaded transcriptomics data:")
-        st.dataframe(rna)
-elif omics_type=='Proteomics':
-    uploaded_file = st.file_uploader("Upload proteomics data")
-    if uploaded_file:
-        protein = pd.read_csv(uploaded_file, header=0, sep='\t', low_memory=False)
-        protein = protein.iloc[5:,:]
-        st.write("Uploaded proteomics data:")
-        st.dataframe(protein)
+
+#if omics_type=='Transcriptomics':
+#    uploaded_file = st.file_uploader("Upload transcriptomics data")
+#    if uploaded_file:
+#        rna = pd.read_csv(uploaded_file, index_col=0)
+#        st.write("Uploaded transcriptomics data:")
+#        st.dataframe(rna)
+#elif omics_type=='Proteomics':
+#    uploaded_file = st.file_uploader("Upload proteomics data")
+#    if uploaded_file:
+#        protein = pd.read_csv(uploaded_file, header=0, sep='\t', low_memory=False)
+#        protein = protein.iloc[5:,:]
+#        st.write("Uploaded proteomics data:")
+#        st.dataframe(protein)
     
 cell_type = st.selectbox('Select cell-type: ', ['T-ALL', 'B-ALL'])
 drugs_of_interest = ['Idarubicin', 'Dasatinib', 'Ponatinib', 'Venetoclax', 'Navitoclax', 'Doxorubicin', 'Birinapant', 'Bortezomib', 'CB-103', 'Dexamethasone', 'Cytarabine', 'Etoposide', 'Methotrexate', 'Selinexor', 'Vincristine', 'Nilotinib', 'Temsirolimus', 'Bosutinib', 'Panobinostat', 'Trametinib', 'Ruxolitinib', 'Dinaciclib', 'A1331852', 'S-63845', 'Nelarabine']
@@ -360,32 +361,34 @@ threshold = st.slider('Select threshold for correlation-based feature pre-select
 classifiers = st.multiselect('Select models - You may choose multiple among the following: [Logistic Regression, Decision Tree Classifier, Random Forest Classifier, Support Vector Machine Classifer, XG Boost Classifier and Lasso Regression]', ['LR', 'DT', 'RF', 'SVC', 'XGB', 'Lasso'])
 #st.write(classifiers)
 
-if uploaded_file is not None:
-    data = mapping_omicsandDRP2metadata(drugOfInterest)
+#if uploaded_file is not None:
+#else:
+    #st.warning("Please upload a file to proceed!")
+
+data = mapping_omicsandDRP2metadata(drugOfInterest)
     
+if omics_type == 'Transcriptomics':
+    drug_data = data[0]
+elif omics_type == 'Proteomics':
+    drug_data = data[1]
+    
+if cell_type == 'T-ALL':
     if omics_type == 'Transcriptomics':
-        drug_data = data[0]
+        data = data[2]
     elif omics_type == 'Proteomics':
-        drug_data = data[1]
+        data = data[3]
+elif cell_type == 'B-ALL':
+    if omics_type == 'Transcriptomics':
+        data = data[4]
+    elif omics_type == 'Proteomics':
+        data = data[5]
     
-    if cell_type == 'T-ALL':
-        if omics_type == 'Transcriptomics':
-            data = data[2]
-        elif omics_type == 'Proteomics':
-            data = data[3]
-    elif cell_type == 'B-ALL':
-        if omics_type == 'Transcriptomics':
-            data = data[4]
-        elif omics_type == 'Proteomics':
-            data = data[5]
-    
-    analyze = st.button('Analyze', on_click=set_stage, args=(1,))
-    if analyze:
-        if len(classifiers) < 2:
-            st.write('Please select at least 2 classifiers')
-        else:
-            #st.write(st.session_state)
-            exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
-            selFeatures = classify(data, drug_data, exp_name, classifiers, num_features, threshold, omics_type)
-else:
-    st.warning("Please upload a file to proceed!")
+analyze = st.button('Analyze', on_click=set_stage, args=(1,))
+if analyze:
+    if len(classifiers) < 2:
+        st.write('Please select at least 2 classifiers')
+    else:
+        #st.write(st.session_state)
+        exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
+        selFeatures = classify(data, drug_data, exp_name, classifiers, num_features, threshold, omics_type)
+
