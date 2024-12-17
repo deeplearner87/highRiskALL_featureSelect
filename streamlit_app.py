@@ -343,13 +343,13 @@ if omics_type=='Transcriptomics':
     if uploaded_file:
         rna = pd.read_csv(uploaded_file, index_col=0)
         st.write("Uploaded transcriptomics data:")
-        st.dataframe(user_data)
+        st.dataframe(rna)
 elif omics_type=='Proteomics':
     uploaded_file = st.file_uploader("Upload proteomics data")
     if uploaded_file:
         protein = pd.read_csv(uploaded_file, header=0, sep='\t', low_memory=False)
         st.write("Uploaded proteomics data:")
-        st.dataframe(user_data)
+        st.dataframe(protein)
     
 cell_type = st.selectbox('Select cell-type: ', ['T-ALL', 'B-ALL'])
 drugs_of_interest = ['Idarubicin', 'Dasatinib', 'Ponatinib', 'Venetoclax', 'Navitoclax', 'Doxorubicin', 'Birinapant', 'Bortezomib', 'CB-103', 'Dexamethasone', 'Cytarabine', 'Etoposide', 'Methotrexate', 'Selinexor', 'Vincristine', 'Nilotinib', 'Temsirolimus', 'Bosutinib', 'Panobinostat', 'Trametinib', 'Ruxolitinib', 'Dinaciclib', 'A1331852', 'S-63845', 'Nelarabine']
