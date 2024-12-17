@@ -33,7 +33,7 @@ def set_stage(stage):
 import os
  
 dir = 'https://raw.githubusercontent.com/deeplearner87/highRiskALL_featureSelect/main/'
-os.chdir(dir)
+#os.chdir(dir)
 
 
 # Drug response data
@@ -62,7 +62,7 @@ def create_groups(df, drugOfInterest):
 
 #Mapping Transcriptomics, Proteomics and DRP data against clinical metadata
 def mapping_omicsandDRP2metadata(drugOfInterest):
-    drp = pd.read_csv('Rank_Drugs_cleaned_only25_drugs_10122024.csv', header=0)
+    drp = pd.read_csv(dir+'Rank_Drugs_cleaned_only25_drugs_10122024.csv', header=0)
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
     #Removing rows corresponding to the contaminated sample '128'
@@ -80,7 +80,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     drug_protein_df.index.names = ['Sample_ID']
 
     #Loading clinical metadata
-    metadata = pd.read_csv('cleaned_metadata.csv')
+    metadata = pd.read_csv(dir+'cleaned_metadata.csv')
     drug_df = drug_protein_df.reset_index()
     joined_df = metadata.merge(drug_df, how='inner', left_on='Sample ID Proteomics', right_on='Sample_ID')
     
@@ -92,7 +92,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #Read the CSV file from Google Drive
     protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
-    #protein = pd.read_csv('Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
+    #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
     protein = protein.iloc[5:,:]
     protein_copy = protein.copy()
     protein.index = protein['Protein ID']
@@ -107,7 +107,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #Read the CSV file from Google Drive
     rna = pd.read_csv(file_url, index_col=0)
 
-    #rna = pd.read_csv('High-Risk-ALL_rna_preprocessed_protein_coding_genes.csv', index_col=0)
+    #rna = pd.read_csv(dir+'High-Risk-ALL_rna_preprocessed_protein_coding_genes.csv', index_col=0)
 
     B_ALL_rna_df = rna.loc[B_ALL_samples['Sample ID Submitted']]
     T_ALL_rna_df = rna.loc[T_ALL_samples['Sample ID Submitted']]
