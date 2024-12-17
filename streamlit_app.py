@@ -93,7 +93,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
-    protein = protein.iloc[5:,:]
+    #protein = protein.iloc[5:,:]
     protein_copy = protein.copy()
     protein.index = protein['Protein ID']
         
@@ -137,7 +137,7 @@ def protein2gene(df, cols):
     #protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
-    protein = protein.iloc[5:,:]
+    #protein = protein.iloc[5:,:]
     protein_copy = protein.copy()
     protein.index = protein['Protein ID']
     protein = protein.iloc[:,0:127]
@@ -348,6 +348,7 @@ elif omics_type=='Proteomics':
     uploaded_file = st.file_uploader("Upload proteomics data")
     if uploaded_file:
         protein = pd.read_csv(uploaded_file, header=0, sep='\t', low_memory=False)
+        protein = protein.iloc[5:,:]
         st.write("Uploaded proteomics data:")
         st.dataframe(protein)
     
