@@ -127,7 +127,6 @@ def preSelectFeatures(X, y, threshold, exp_name):
     import os
     X['Target'] = y
     corr_mat = pd.DataFrame(X.corr()['Target'])
-    pd.DataFrame(corr_mat).to_csv(os.path.join(dir,'Results/')+exp_name+'_correlation_with_target_DRP.csv')
     features = corr_mat.index[abs(corr_mat['Target']) >= threshold].tolist()   #consider both positive and negative correlations >=0.3 and <=-0.3
     return features[:-1]
 
@@ -332,7 +331,6 @@ def classify(data, drug_data, exp_name, classifiers, num_features, threshold, om
     X = X[selFeatures]
     differentialPlot(X, labels.values, exp_name)
     X['Drug_Class']=labels
-    #X.to_csv(os.path.join(dir,'Results/')+exp_name+'DRP_ML_selFeatures_with_annotations.csv')
     return selFeatures
 
 omics_type = st.selectbox('Select omics-type: ', ['Proteomics', 'Transcriptomics'])
