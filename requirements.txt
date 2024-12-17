@@ -1,0 +1,13 @@
+streamlit
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+anndata
+scanpy
+scipy
+xgboost
+shap
+openpyxl
+gdown
