@@ -344,7 +344,7 @@ drugOfInterest = st.selectbox('Select drug', options=[opt.strip() for opt in dru
 num_features = st.slider('Select number of genes you want to select',1, 100, 50)
 threshold = st.slider('Select threshold for correlation-based feature pre-selection', 0.00, 1.00, 0.55) #threshold for correlation-based preselection
 classifiers = st.multiselect('Select models - You may choose multiple among the following: [Logistic Regression, Decision Tree Classifier, Random Forest Classifier, Support Vector Machine Classifer, XG Boost Classifier and Lasso Regression]', ['LR', 'DT', 'RF', 'SVC', 'XGB', 'Lasso'])
-st.write(classifiers)
+#st.write(classifiers)
 
 data = mapping_omicsandDRP2metadata(drugOfInterest)
 
