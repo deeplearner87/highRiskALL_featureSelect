@@ -359,29 +359,32 @@ threshold = st.slider('Select threshold for correlation-based feature pre-select
 classifiers = st.multiselect('Select models - You may choose multiple among the following: [Logistic Regression, Decision Tree Classifier, Random Forest Classifier, Support Vector Machine Classifer, XG Boost Classifier and Lasso Regression]', ['LR', 'DT', 'RF', 'SVC', 'XGB', 'Lasso'])
 #st.write(classifiers)
 
-data = mapping_omicsandDRP2metadata(drugOfInterest)
-
-if omics_type == 'Transcriptomics':
-    drug_data = data[0]
-elif omics_type == 'Proteomics':
-    drug_data = data[1]
-
-if cell_type == 'T-ALL':
+if uploaded_file is not None:
+    data = mapping_omicsandDRP2metadata(drugOfInterest)
+    
     if omics_type == 'Transcriptomics':
-        data = data[2]
+        drug_data = data[0]
     elif omics_type == 'Proteomics':
-        data = data[3]
-elif cell_type == 'B-ALL':
-    if omics_type == 'Transcriptomics':
-        data = data[4]
-    elif omics_type == 'Proteomics':
-        data = data[5]
-
-analyze = st.button('Analyze', on_click=set_stage, args=(1,))
-if analyze:
-    if len(classifiers) < 2:
-        st.write('Please select at least 2 classifiers')
-    else:
-        #st.write(st.session_state)
-        exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
-        selFeatures = classify(data, drug_data, exp_name, classifiers, num_features, threshold, omics_type)
+        drug_data = data[1]
+    
+    if cell_type == 'T-ALL':
+        if omics_type == 'Transcriptomics':
+            data = data[2]
+        elif omics_type == 'Proteomics':
+            data = data[3]
+    elif cell_type == 'B-ALL':
+        if omics_type == 'Transcriptomics':
+            data = data[4]
+        elif omics_type == 'Proteomics':
+            data = data[5]
+    
+    analyze = st.button('Analyze', on_click=set_stage, args=(1,))
+    if analyze:
+        if len(classifiers) < 2:
+            st.write('Please select at least 2 classifiers')
+        else:
+            #st.write(st.session_state)
+            exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
+            selFeatures = classify(data, drug_data, exp_name, classifiers, num_features, threshold, omics_type)
+else:
+    st.warning("Please upload a file to proceed!")
