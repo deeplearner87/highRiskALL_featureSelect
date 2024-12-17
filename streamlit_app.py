@@ -88,7 +88,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     T_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe'] == 'T-ALL', ['Sample ID Submitted', 'Sample ID Proteomics', 'Diagnosis/Relapse']]
     
     #Loading the protein data
-    file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ"
+    file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ/download"
     #Read the CSV file from Nextcloud
     protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
@@ -103,7 +103,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Sample ID Proteomics'])].T
 
     #Loading Transcriptomics data
-    file_url = "https://hub.dkfz.de/s/Z8je56exzwq44sQ"
+    file_url = "https://hub.dkfz.de/s/Z8je56exzwq44sQ/download"
     #Read the CSV file from Nextcloud
     rna = pd.read_csv(file_url, index_col=0)
 
@@ -132,7 +132,7 @@ def preSelectFeatures(X, y, threshold, exp_name):
 
 def protein2gene(df, cols):
     #Loading the protein data
-    file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ"
+    file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ/download"
     #Read the CSV file from NextCloud
     protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
     
