@@ -64,7 +64,7 @@ def create_groups(df, drugOfInterest):
 def mapping_omicsandDRP2metadata(drugOfInterest):
     drp_data_url = st.secrets["data_links"]["drp_data"]
     #Read the CSV file from Nextcloud
-    drp = pd.read_csv(drp_data_url, encoding="latin1")
+    drp = pd.read_csv(drp_data_url, encoding="latin1", low_memory=False)
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
     #Removing rows corresponding to the contaminated sample '128'
@@ -97,7 +97,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
     
     #Read the CSV file from Nextcloud
-    protein = pd.read_csv(protein_vsn_url, header=0, sep='\t', low_memory=False)
+    protein = pd.read_csv(protein_vsn_url, header=0, low_memory=False)
     
     protein = protein.iloc[5:,:]
     protein_copy = protein.copy()
@@ -143,7 +143,7 @@ def protein2gene(df, cols):
     protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
     
     #Read the CSV file from Nextcloud
-    protein = pd.read_csv(protein_vsn_url, header=0, sep='\t', low_memory=False)
+    protein = pd.read_csv(protein_vsn_url, header=0, low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
     protein = protein.iloc[5:,:]
