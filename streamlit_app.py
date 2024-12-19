@@ -32,7 +32,7 @@ def set_stage(stage):
 
 import os
  
-dir = 'https://raw.githubusercontent.com/deeplearner87/highRiskALL_featureSelect/main/'
+#dir = 'https://raw.githubusercontent.com/deeplearner87/highRiskALL_featureSelect/main/'
 #os.chdir(dir)
 
 
@@ -62,7 +62,9 @@ def create_groups(df, drugOfInterest):
 
 #Mapping Transcriptomics, Proteomics and DRP data against clinical metadata
 def mapping_omicsandDRP2metadata(drugOfInterest):
-    drp = pd.read_csv(dir+'Rank_Drugs_cleaned_only25_drugs_10122024.csv', header=0)
+    drp_data_url = st.secrets["data_links"]["drp_data"]
+    #Read the CSV file from Nextcloud
+    drp = pd.read_csv(drp_data_url, header=0)
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
     #Removing rows corresponding to the contaminated sample '128'
@@ -80,42 +82,47 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     drug_protein_df.index.names = ['Sample_ID']
 
     #Loading clinical metadata
-    metadata = pd.read_csv(dir+'cleaned_metadata.csv')
+    clinical_metadata_url = st.secrets["data_links"]["clinical_metadata"]
+    #Read the CSV file from Nextcloud
+    metadata = pd.read_csv(clinical_metadata_url, header=0)
     drug_df = drug_protein_df.reset_index()
-    joined_df = metadata.merge(drug_df, how='inner', left_on='Sample ID Proteomics', right_on='Sample_ID')
+    joined_df = metadata.merge(drug_df, how='inner', left_on='Protein_Sample_ID', right_on='Sample_ID')
     
-    B_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe']== 'B-ALL', ['Sample ID Submitted', 'Sample ID Proteomics', 'Diagnosis/Relapse']]
-    T_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe'] == 'T-ALL', ['Sample ID Submitted', 'Sample ID Proteomics', 'Diagnosis/Relapse']]
+    B_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe']== 'B-ALL', ['RNA_Sample_ID_Available', 'Protein_Sample_ID', 'Diagnosis/Relapse']]
+    T_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe'] == 'T-ALL', ['RNA_Sample_ID_Available', 'Protein_Sample_ID', 'Diagnosis/Relapse']]
     
     #Loading the protein data
-    file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ/download"
-    #Read the CSV file from Nextcloud
-    protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
+    #file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ/download"
+    protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
+    #protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
     
-    #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
+    #Read the CSV file from Nextcloud
+    protein = pd.read_csv(protein_vsn_url, header=0, sep='\t', low_memory=False)
+    
     protein = protein.iloc[5:,:]
     protein_copy = protein.copy()
     protein.index = protein['Protein ID']
         
     protein = protein.iloc[:,0:127]
         
-    T_ALL_protein_df = protein[protein.columns.intersection(T_ALL_samples['Sample ID Proteomics'])].T
-    B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Sample ID Proteomics'])].T
+    T_ALL_protein_df = protein[protein.columns.intersection(T_ALL_samples['Protein_Sample_ID'])].T
+    B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Protein_Sample_ID'])].T
 
     #Loading Transcriptomics data
-    file_url = "https://hub.dkfz.de/s/Z8je56exzwq44sQ/download"
+    #file_url = "https://hub.dkfz.de/s/Z8je56exzwq44sQ/download"
+    rna_url = st.secrets["data_links"]["rna"]
     #Read the CSV file from Nextcloud
     rna = pd.read_csv(file_url, index_col=0)
 
     #rna = pd.read_csv(dir+'High-Risk-ALL_rna_preprocessed_protein_coding_genes.csv', index_col=0)
 
-    B_ALL_rna_df = rna.loc[B_ALL_samples['Sample ID Submitted']]
-    T_ALL_rna_df = rna.loc[T_ALL_samples['Sample ID Submitted']]
+    B_ALL_rna_df = rna.loc[B_ALL_samples['RNA_Sample_ID_Available']]
+    T_ALL_rna_df = rna.loc[T_ALL_samples['RNA_Sample_ID_Available']]
     
     drug_rna_df = joined_df
-    drug_rna_df.index = drug_rna_df['Sample ID Submitted']
+    drug_rna_df.index = drug_rna_df['RNA_Sample_ID_Available']
     drug_rna_df.index.names = ['Sample_ID']
-    drug_rna_df.drop(columns=['Sample ID Submitted', 'Remarks (Dibyendu)', 'Sample ID Proteomics',
+    drug_rna_df.drop(columns=['RNA_Sample_ID_Available', 'Remarks', 'Protein_Sample_ID',
            'Immunophenoytpe', 'Diagnosis/Relapse', 'Sex', 'Age', 'ZNS',
            'Pred.resp.', 'Risiko MRD', 'Risk group', 'Calculated site of relapse',
            'Timepoint of relapse', 'matched pairs', 'Cytogenetics', 'Unnamed: 13',
@@ -132,9 +139,11 @@ def preSelectFeatures(X, y, threshold, exp_name):
 
 def protein2gene(df, cols):
     #Loading the protein data
-    file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ/download"
-    #Read the CSV file from NextCloud
-    protein = pd.read_csv(file_url, header=0, sep='\t', low_memory=False)
+    protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
+    protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
+    
+    #Read the CSV file from Nextcloud
+    protein = pd.read_csv(protein_vsn_url, header=0, sep='\t', low_memory=False)
     
     #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
     protein = protein.iloc[5:,:]
