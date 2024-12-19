@@ -24,9 +24,9 @@ st.write("""
 """)
 
 
-clinical_metadata_url = st.secrets["data_links"]["clinical_metadata"]
+rna_url = st.secrets["data_links"]["rna"]
 #Read the CSV file from Nextcloud
-metadata = pd.read_csv(clinical_metadata_url, header=0)
+metadata = pd.read_csv(rna_url, header=0)
 st.rame(metadata)
 """
 if 'stage' not in st.session_state:
