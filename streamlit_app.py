@@ -23,9 +23,15 @@ st.write("""
 # High risk ALL - DRP data analysis!
 """)
 
+
+clinical_metadata_url = st.secrets["data_links"]["clinical_metadata"]
+#Read the CSV file from Nextcloud
+metadata = pd.read_csv(clinical_metadata_url, header=0)
+st.rame(metadata)
+"""
 if 'stage' not in st.session_state:
     st.session_state.stage = 0
-
+    
 def set_stage(stage):
     st.session_state.stage = stage
     
@@ -401,3 +407,4 @@ if analyze:
         exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
         selFeatures = classify(data, drug_data, exp_name, classifiers, num_features, threshold, omics_type)
 
+"""
