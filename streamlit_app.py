@@ -1,4 +1,4 @@
-#Run 'mapping_metadata_v1.ipynb' to create the metadata before using this notebook
+#Run 'mapping_metadata_v2.ipynb' to create the metadata before using this notebook
 
 #This notebook takes as input the following files:
 
