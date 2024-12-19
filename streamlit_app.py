@@ -26,7 +26,7 @@ st.write("""
 
 rna_url = "https://hub.dkfz.de/s/8ocxnXLZtiA72wY"
 #Read the CSV file from Nextcloud
-metadata = pd.read_csv(rna_url, header=0)
+metadata = pd.read_csv(rna_url)
 st.rame(metadata)
 """
 if 'stage' not in st.session_state:
