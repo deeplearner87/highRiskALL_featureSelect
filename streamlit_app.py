@@ -123,7 +123,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
             f.write(response.content)
     #Read the file
     rna = pd.read_csv("rna.csv", index_col=0)
-    st.dataframe(rna)
+    #st.dataframe(rna)
     #st.write(B_ALL_samples['RNA_Sample_ID_Available'])
     #st.write(rna.index)
     B_ALL_rna_df = rna.loc[B_ALL_samples['RNA_Sample_ID_Available']]
