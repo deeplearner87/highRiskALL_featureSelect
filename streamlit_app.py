@@ -9,6 +9,7 @@
 #5. ProteinID2Gene mapping
 
 
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -31,13 +32,6 @@ if 'stage' not in st.session_state:
 def set_stage(stage):
     st.session_state.stage = stage
     
-
-import os
- 
-#dir = 'https://raw.githubusercontent.com/deeplearner87/highRiskALL_featureSelect/main/'
-#os.chdir(dir)
-
-
 # Drug response data
 def create_groups(df, drugOfInterest):
     df = df.loc[df['drug']==drugOfInterest]
