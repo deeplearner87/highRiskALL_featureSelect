@@ -72,7 +72,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
             f.write(response.content)
     #Read the file
     drp = pd.read_csv("drp.csv")
-    st.dataframe(drp)
+    #st.dataframe(drp)
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
     #Removing rows corresponding to the contaminated sample '128'
@@ -98,7 +98,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
             f.write(response.content)
     #Read the file
     metadata = pd.read_csv("metadata.csv", header=0)
-    st.dataframe(metadata)
+    #st.dataframe(metadata)
     drug_df = drug_protein_df.reset_index()
     joined_df = metadata.merge(drug_df, how='inner', left_on='Protein_Sample_ID', right_on='Sample_ID')
     
@@ -119,7 +119,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     protein = pd.read_csv("protein.csv", index_col=0)
     
     protein = protein.iloc[5:,:]
-    st.dataframe(protein)   
+    #st.dataframe(protein)   
     T_ALL_protein_df = protein[protein.columns.intersection(T_ALL_samples['Protein_Sample_ID'])].T
     B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Protein_Sample_ID'])].T
 
@@ -132,7 +132,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
             f.write(response.content)
     #Read the file
     rna = pd.read_csv("rna.csv", index_col=0)
-    st.dataframe(rna)
+    #st.dataframe(rna)
     B_ALL_rna_df = rna.loc[B_ALL_samples['RNA_Sample_ID_Available']]
     T_ALL_rna_df = rna.loc[T_ALL_samples['RNA_Sample_ID_Available']]
     
@@ -159,7 +159,7 @@ def preSelectFeatures(X, y, threshold, exp_name):
     return features[:-1]
 
 def protein2gene(df, cols):
-    protein2gene_url = st.secrets["data_links"]["protein2gene"]
+    protein2gene_url = st.secrets["data_links"]["proteinIDtoGene"]
     #Download the file
     response = requests.get(protein2gene_url)
     if response.status_code == 200:
