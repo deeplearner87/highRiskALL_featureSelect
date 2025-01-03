@@ -6,6 +6,7 @@
 #2. Clinical metadata
 #3. Transcriptomics data
 #4. Proteomics data
+#5. ProteinID2Gene mapping
 
 
 import streamlit as st
@@ -45,21 +46,21 @@ import os
 # Drug response data
 def create_groups(df, drugOfInterest):
     df = df.loc[df['drug']==drugOfInterest]
-    # Convert column to numeric if not already
+    #Convert column to numeric if not already
     df = df.copy()
     df['susceptibility_logAUC'] = pd.to_numeric(df['susceptibility_logAUC'], errors='coerce')
     
-    # Define conditions for classification
+    #Define conditions for classification
     conditions = [
         (df['susceptibility_logAUC'] < 0.2),
         (df['susceptibility_logAUC'] >= 0.2) & (df['susceptibility_logAUC'] <= 0.75),
         (df['susceptibility_logAUC'] > 0.75)
     ]
     
-    # Define values for each condition
+    #Define values for each condition
     values = ['Sensitive', 'Intermediate', 'Resistant']
     
-    # Use np.select to create the 'Class' column safely
+    #Use np.select to create the 'Class' column safely
     df = df.copy()  # Ensure we're working with a copy to avoid the warning
     df.loc[:, 'Class'] = np.select(conditions, values, default='Unknown')
     df.index = df['Labeling proteomics']
@@ -68,9 +69,10 @@ def create_groups(df, drugOfInterest):
 
 #Mapping Transcriptomics, Proteomics and DRP data against clinical metadata
 def mapping_omicsandDRP2metadata(drugOfInterest):
-    drp_data_url = st.secrets["data_links"]["drp_data"]
+    drp_data_url = "https://hub.dkfz.de/s/9XiGqLSaBLGqYNe"
+    #drp_data_url = st.secrets["data_links"]["drp_data"]
     #Read the CSV file from Nextcloud
-    drp = pd.read_csv(drp_data_url, encoding="latin1", low_memory=False)
+    drp = pd.read_csv(drp_data_url)
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
     #Removing rows corresponding to the contaminated sample '128'
@@ -86,9 +88,10 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #drp.groupby('drug')['Labeling proteomics'].nunique()
     drug_protein_df = create_groups(drp, drugOfInterest)
     drug_protein_df.index.names = ['Sample_ID']
-
+    
     #Loading clinical metadata
-    clinical_metadata_url = st.secrets["data_links"]["clinical_metadata"]
+    #clinical_metadata_url = st.secrets["data_links"]["clinical_metadata"]
+    clinical_metadata_url = "https://hub.dkfz.de/s/AaHKyyWiKLSpo7k"
     #Read the CSV file from Nextcloud
     metadata = pd.read_csv(clinical_metadata_url, header=0)
     drug_df = drug_protein_df.reset_index()
@@ -98,25 +101,21 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     T_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe'] == 'T-ALL', ['RNA_Sample_ID_Available', 'Protein_Sample_ID', 'Diagnosis/Relapse']]
     
     #Loading the protein data
-    #file_url = "https://hub.dkfz.de/s/oJ2g5MsgDAC7JKZ/download"
-    protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
+    file_url = "https://hub.dkfz.de/s/AkoLR3Ab56gxFB6"     #with vsn
+    #protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
     #protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
     
     #Read the CSV file from Nextcloud
-    protein = pd.read_csv(protein_vsn_url, header=0, low_memory=False)
+    protein = pd.read_csv(file_url, index_col=0)
     
     protein = protein.iloc[5:,:]
-    protein_copy = protein.copy()
-    protein.index = protein['Protein ID']
-        
-    protein = protein.iloc[:,0:127]
-        
+       
     T_ALL_protein_df = protein[protein.columns.intersection(T_ALL_samples['Protein_Sample_ID'])].T
     B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Protein_Sample_ID'])].T
 
     #Loading Transcriptomics data
-    #file_url = "https://hub.dkfz.de/s/Z8je56exzwq44sQ/download"
-    rna_url = st.secrets["data_links"]["rna"]
+    file_url = "https://hub.dkfz.de/s/ModMj4MpHiK34wq"
+    #rna_url = st.secrets["data_links"]["rna"]
     #Read the CSV file from Nextcloud
     rna = pd.read_csv(file_url, index_col=0)
 
@@ -128,11 +127,13 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     drug_rna_df = joined_df
     drug_rna_df.index = drug_rna_df['RNA_Sample_ID_Available']
     drug_rna_df.index.names = ['Sample_ID']
-    drug_rna_df.drop(columns=['RNA_Sample_ID_Available', 'Remarks', 'Protein_Sample_ID',
-           'Immunophenoytpe', 'Diagnosis/Relapse', 'Sex', 'Age', 'ZNS',
-           'Pred.resp.', 'Risiko MRD', 'Risk group', 'Calculated site of relapse',
-           'Timepoint of relapse', 'matched pairs', 'Cytogenetics', 'Unnamed: 13',
-           'Sample_ID'], inplace=True)
+    #print(drug_rna_df.columns)
+    drug_rna_df.drop(columns=['Sample_ID_Submitted', 'RNA_Sample_ID_Available',
+       'Duplicate_RNA_Sample_Available?', 'Protein_Sample_ID', 'WES_Sample_ID',
+       'Immunophenoytpe', 'Diagnosis/Relapse', 'Sex', 'Age', 'ZNS',
+       'Pred.resp.', 'Risiko MRD', 'Risk group', 'Calculated site of relapse',
+       'Timepoint of relapse', 'matched pairs', 'Cytogenetics', 'Remarks',
+       'Sample_ID'], inplace=True)
     return [drug_rna_df, drug_protein_df, T_ALL_rna_df, T_ALL_protein_df, B_ALL_rna_df, B_ALL_protein_df]
 
 # Feature Selection
@@ -140,25 +141,17 @@ def preSelectFeatures(X, y, threshold, exp_name):
     import os
     X['Target'] = y
     corr_mat = pd.DataFrame(X.corr()['Target'])
+    #pd.DataFrame(corr_mat).to_csv(os.path.join(dir,'Results/')+exp_name+'_correlation_with_target_DRP.csv')
     features = corr_mat.index[abs(corr_mat['Target']) >= threshold].tolist()   #consider both positive and negative correlations >=0.3 and <=-0.3
+    #print(features)
     return features[:-1]
 
 def protein2gene(df, cols):
-    #Loading the protein data
-    protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
-    protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
-    
-    #Read the CSV file from Nextcloud
-    protein = pd.read_csv(protein_vsn_url, header=0, low_memory=False)
-    
-    #protein = pd.read_csv(dir+'Proteome_Atleast1validvalue_ImputedGD.txt', header=0, sep='\t', low_memory=False)
-    protein = protein.iloc[5:,:]
-    protein_copy = protein.copy()
-    protein.index = protein['Protein ID']
-    protein = protein.iloc[:,0:127]
-    protein2gene_mapping =  protein_copy[['Protein ID', 'Gene']]
+    protein2gene_url = "https://hub.dkfz.de/s/ModMj4MpHiK34wq"
+    protein2gene_mapping = pd.read_csv(protein2gene_url)
+    genes = protein2gene_mapping.loc[protein2gene_mapping['Protein.ID'].isin(cols), 'Gene']
+    #print(genes)
     df = df[cols]
-    genes = protein2gene_mapping.loc[protein2gene_mapping['Protein ID'].isin(df.columns), 'Gene']
     df.columns = genes
     df.columns = df.columns.astype(str)
     return df
@@ -185,8 +178,7 @@ def evaluateClassifiers(X, y):
         print(name)
         for score in ["accuracy", "f1_weighted", "roc_auc", "r2", "neg_mean_absolute_error", "normalized_mutual_info_score", "neg_root_mean_squared_error", "explained_variance"]:
             results = cross_val_score(model, X.values, y, cv = kfold, scoring = score)
-            #print(score,': {:.2f}'.format(results.mean()))
-
+            print(score,': {:.2f}'.format(results.mean()))
 
 def importancePlot(feat_imp, exp_name):
     import matplotlib.pyplot as plt
@@ -223,7 +215,7 @@ def differentialPlot(df, conditions, exp_name):
         ax['heatmap_ax'].set_ylabel("Gene")
         st.pyplot(plt.gcf())
         #plt.savefig(os.path.join(dir,'Results/')+filename, dpi = 300, format = 'pdf', bbox_inches="tight")
-
+        
 def majorityVoting(lof): #Input the list of features
     from collections import Counter
     cnt=Counter()
@@ -324,6 +316,17 @@ def classify(data, drug_data, exp_name, classifiers, num_features, threshold, om
     data = data.loc[drug_data.index] #filter out samples corresponding to the 'Intermediate' class from the data
     labels = drug_data['Class']
 
+    #label = pd.DataFrame(drug_data['Class'])
+    #label = label[label['Class']!='Intermediate']
+    #drug_data = drug_data.loc[drug_data['Class']!='Intermediate']
+    #if omics_type=='Transcriptomics':
+    #    samples = label
+    #samples = data.index.intersection(label.index) #extracting sample IDs for drug classes 'Sensitive' and 'Resistant'
+    #print(label)
+    #print(samples)
+    #X = data.loc[samples]
+    #label = label.loc[samples]
+    
     le = LabelEncoder()
     y = le.fit_transform(np.ravel(labels))
     cols = data.columns.astype(str)
@@ -350,6 +353,7 @@ def classify(data, drug_data, exp_name, classifiers, num_features, threshold, om
     X = X[selFeatures]
     differentialPlot(X, labels.values, exp_name)
     X['Drug_Class']=labels
+    #X.to_csv(os.path.join(dir,'Results/')+exp_name+'DRP_ML_selFeatures_with_annotations.csv')
     return selFeatures
 
 omics_type = st.selectbox('Select omics-type: ', ['Proteomics', 'Transcriptomics'])
@@ -386,7 +390,7 @@ if omics_type == 'Transcriptomics':
     drug_data = data[0]
 elif omics_type == 'Proteomics':
     drug_data = data[1]
-    
+
 if cell_type == 'T-ALL':
     if omics_type == 'Transcriptomics':
         data = data[2]
@@ -406,5 +410,3 @@ if analyze:
         #st.write(st.session_state)
         exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
         selFeatures = classify(data, drug_data, exp_name, classifiers, num_features, threshold, omics_type)
-
-"""
