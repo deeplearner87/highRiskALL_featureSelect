@@ -70,7 +70,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     if response.status_code == 200:
         with open("drp.csv", "wb") as f:
             f.write(response.content)
-    #Read the CSV file from Nextcloud
+    #Read the file
     drp = pd.read_csv("drp.csv")
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
@@ -95,7 +95,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     if response.status_code == 200:
         with open("metadata.csv", "wb") as f:
             f.write(response.content)
-    #Read the CSV file from Nextcloud
+    #Read the file
     metadata = pd.read_csv("metadata.csv", header=0)
     drug_df = drug_protein_df.reset_index()
     joined_df = metadata.merge(drug_df, how='inner', left_on='Protein_Sample_ID', right_on='Sample_ID')
@@ -113,7 +113,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
         with open("protein.csv", "wb") as f:
             f.write(response.content)
     
-    #Read the CSV file from Nextcloud
+    #Read the file
     protein = pd.read_csv("protein.csv", index_col=0)
     
     protein = protein.iloc[5:,:]
@@ -122,14 +122,13 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Protein_Sample_ID'])].T
 
     #Loading Transcriptomics data
-    #file_url = "https://hub.dkfz.de/s/ModMj4MpHiK34wq"
     rna_url = st.secrets["data_links"]["rna"]
     #Download the file
     response = requests.get(rna_url)
     if response.status_code == 200:
         with open("rna.csv", "wb") as f:
             f.write(response.content)
-    #Read the CSV file from Nextcloud
+    #Read the file
     rna = pd.read_csv("rna.csv", index_col=0)
 
     B_ALL_rna_df = rna.loc[B_ALL_samples['RNA_Sample_ID_Available']]
@@ -158,12 +157,13 @@ def preSelectFeatures(X, y, threshold, exp_name):
     return features[:-1]
 
 def protein2gene(df, cols):
-    protein2gene_url = st.secrets["data_links"]["rna"]
+    protein2gene_url = st.secrets["data_links"]["protein2gene"]
     #Download the file
     response = requests.get(protein2gene_url)
     if response.status_code == 200:
         with open("protein2gene.csv", "wb") as f:
             f.write(response.content)
+    #Read the file
     protein2gene_mapping = pd.read_csv("protein2gene.csv")
     genes = protein2gene_mapping.loc[protein2gene_mapping['Protein.ID'].isin(cols), 'Gene']
     #print(genes)
