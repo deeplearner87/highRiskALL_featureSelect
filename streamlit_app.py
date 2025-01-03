@@ -160,6 +160,7 @@ def protein2gene(df, cols):
             f.write(response.content)
     #Read the file
     protein2gene_mapping = pd.read_csv("protein2gene.csv")
+    st.write("Hello")
     st.dataframe(protein2gene_mapping)
     genes = protein2gene_mapping.loc[protein2gene_mapping['Protein.ID'].isin(cols), 'Gene']
     #print(genes)
