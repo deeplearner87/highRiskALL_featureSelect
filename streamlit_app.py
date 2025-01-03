@@ -73,7 +73,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #drp_data_url = st.secrets["data_links"]["drp_data"]
     #Read the CSV file from Nextcloud
     #drp = pd.read_csv(drp_data_url)
-    drp = pd.read_csv(file.csv)
+    drp = pd.read_csv("file.csv")
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
     #Removing rows corresponding to the contaminated sample '128'
