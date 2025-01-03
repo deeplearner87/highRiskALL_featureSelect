@@ -66,7 +66,7 @@ def create_groups(df, drugOfInterest):
 def mapping_omicsandDRP2metadata(drugOfInterest):
     drp_data_url = "https://hub.dkfz.de/s/9XiGqLSaBLGqYNe/download"
     # Download the file
-    response = requests.get(url)
+    response = requests.get(drp_data_url)
     if response.status_code == 200:
         with open("file.csv", "wb") as f:
             f.write(response.content)
