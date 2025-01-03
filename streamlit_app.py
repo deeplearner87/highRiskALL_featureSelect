@@ -218,7 +218,7 @@ def differentialPlot(df, conditions, exp_name):
     X = stats.zscore(X)
     ad = anndata.AnnData(X)
     ad.obs = pd.DataFrame(conditions, columns=['class'])
-    ad.var_names = X.columns
+    ad.var_names = cols
     ad.var_names_make_unique()
     filename = exp_name+'_heatmap_based_on_DRP.pdf'
     with plt.rc_context():
