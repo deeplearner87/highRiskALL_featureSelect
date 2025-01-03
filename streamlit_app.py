@@ -63,10 +63,16 @@ def create_groups(df, drugOfInterest):
 
 #Mapping Transcriptomics, Proteomics and DRP data against clinical metadata
 def mapping_omicsandDRP2metadata(drugOfInterest):
-    drp_data_url = "https://hub.dkfz.de/s/9XiGqLSaBLGqYNe"
+    drp_data_url = "https://hub.dkfz.de/s/9XiGqLSaBLGqYNe/download"
+    # Download the file
+    response = requests.get(url)
+    if response.status_code == 200:
+        with open("file.csv", "wb") as f:
+            f.write(response.content)
     #drp_data_url = st.secrets["data_links"]["drp_data"]
     #Read the CSV file from Nextcloud
-    drp = pd.read_csv(drp_data_url)
+    #drp = pd.read_csv(drp_data_url)
+    drp = pd.read_csv(file.csv)
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
     #Removing rows corresponding to the contaminated sample '128'
