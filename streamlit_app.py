@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import LabelEncoder
 import gdown
+import requests
 
 import warnings
 warnings.filterwarnings('ignore')
