@@ -110,7 +110,7 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #Read the file
     protein = pd.read_csv("protein.csv", index_col=0)
     
-    protein = protein.iloc[5:,:]
+    #protein = protein.iloc[5:,:]
     T_ALL_protein_df = protein[protein.columns.intersection(T_ALL_samples['Protein_Sample_ID'])].T
     B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Protein_Sample_ID'])].T
 
