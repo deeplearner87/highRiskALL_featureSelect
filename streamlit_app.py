@@ -98,11 +98,11 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     T_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe'] == 'T-ALL', ['RNA_Sample_ID_Available', 'Protein_Sample_ID', 'Diagnosis/Relapse']]
     
     #Loading the protein data
-    protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
-    #protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
+    #protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
+    protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
 
     #Download the file
-    response = requests.get(protein_vsn_url)
+    response = requests.get(protein_no_vsn_url)
     if response.status_code == 200:
         with open("protein.csv", "wb") as f:
             f.write(response.content)
