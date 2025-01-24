@@ -68,8 +68,8 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     drp = pd.read_csv("drp.csv")
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
-    #Removing rows corresponding to the contaminated sample '128'
-    drp = drp.loc[drp['Labeling proteomics']!='S128']
+    #Removing rows corresponding to the contaminated sample '126'
+    drp = drp.loc[drp['Labeling proteomics']!='S126']
     drp.drop(columns=['sample_id'], inplace=True)
     #Drop duplicates and keep only the first entry - not necessary any more as data has been cleaned already!
     #drp = drp.drop_duplicates(subset=['Labeling proteomics', 'drug'], keep='first')
