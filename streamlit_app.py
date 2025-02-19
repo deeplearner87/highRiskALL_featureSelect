@@ -73,16 +73,30 @@ def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
     drp.drop(columns=['sample_id'], inplace=True)
     drug_protein_df = create_groups(drp, drugOfInterest)
     drug_protein_df.index.names = ['Sample_ID']
-    
+    """
     #Loading clinical metadata
-    clinical_metadata_url = st.secrets["data_links"]["clinical_metadata_KR"]
+    clinical_metadata_url1 = st.secrets["data_links"]["clinical_metadata_KR"]
     #Download the file
     response = requests.get(clinical_metadata_url)
+    
     if response.status_code == 200:
         with open("metadata.csv", "wb") as f:
             f.write(response.content)
     #Read the file
     metadata = pd.read_csv("metadata.csv", header=0)
+    """
+    
+    clinical_metadata_url1 = st.secrets["data_links"]["clinical_metadata_KR"]
+    response = requests.get(clinical_metadata_url1)
+
+    if response.status_code == 200:
+        with open("metadata.csv", "wb") as f:
+            f.write(response.content)
+            st.write("Download successful.")
+    else:
+            st.write(f"Failed to download file. Status code: {response.status_code}")
+    
+    
     """
     try:
         metadata = pd.read_excel("metadata.xlsx", engine="openpyxl")
