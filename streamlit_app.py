@@ -85,9 +85,9 @@ def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
     #metadata = pd.read_excel("metadata.xlsx", header=0)
     try:
         metadata = pd.read_excel("metadata.xlsx", engine="openpyxl")
-        st.print(metadata.head())  # Print first few rows to confirm it's loaded
+        st.write(metadata.head())  # Print first few rows to confirm it's loaded
     except Exception as e:
-        st.print(f"Error reading Excel file: {e}")
+        st.write(f"Error reading Excel file: {e}")
     metadata['Sample ID Proteomics'] = metadata['Sample ID Proteomics'].astype('str')
     metadata['Sample ID Proteomics'] = 'S'+metadata['Sample ID Proteomics']
     metadata['Immunophenoytpe']=metadata['Immunophenoytpe'].astype('str')
