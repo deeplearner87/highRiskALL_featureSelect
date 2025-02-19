@@ -65,7 +65,7 @@ def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
         with open("drp.csv", "wb") as f:
             f.write(response.content)
     #Read the file
-    drp = pd.read_csv("drp.csv")
+    drp = pd.read_csv("drp.csv", header=0)
     drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
     drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
     #Removing rows corresponding to the contaminated sample '126'
