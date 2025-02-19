@@ -75,7 +75,7 @@ def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
     drug_protein_df.index.names = ['Sample_ID']
     
     #Loading clinical metadata
-    clinical_metadata_url = st.secrets["data_links"]["clinical_metadata"]
+    clinical_metadata_url = st.secrets["data_links"]["clinical_metadata_KR"]
     #Download the file
     response = requests.get(clinical_metadata_url)
     if response.status_code == 200:
