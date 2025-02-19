@@ -56,8 +56,8 @@ def create_groups(df, drugOfInterest):
     df.drop(columns=['Labeling proteomics', 'drug'], inplace=True)
     return df
 
-#Mapping Transcriptomics, Proteomics and DRP data against clinical metadata
-def mapping_omicsandDRP2metadata(drugOfInterest):
+#Mapping Proteomics and DRP data against clinical metadata
+def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
     drp_data_url = st.secrets["data_links"]["drp_data"]
     #Download the file
     response = requests.get(drp_data_url)
@@ -71,14 +71,6 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #Removing rows corresponding to the contaminated sample '126'
     drp = drp.loc[drp['Labeling proteomics']!='S126']
     drp.drop(columns=['sample_id'], inplace=True)
-    #Drop duplicates and keep only the first entry - not necessary any more as data has been cleaned already!
-    #drp = drp.drop_duplicates(subset=['Labeling proteomics', 'drug'], keep='first')
-    #Filtering for 25 drugs - not necessary any more as data has been filtered already!
-    #drp = drp.loc[drp['drug'].isin(drugs_of_interest)]
-    ##Check how many drugs each sample is treated with
-    #drp.groupby('Labeling proteomics')['drug'].nunique()
-    ##Check how many samples were treated with the 25-drugs panel
-    #drp.groupby('drug')['Labeling proteomics'].nunique()
     drug_protein_df = create_groups(drp, drugOfInterest)
     drug_protein_df.index.names = ['Sample_ID']
     
@@ -91,6 +83,71 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
             f.write(response.content)
     #Read the file
     metadata = pd.read_csv("metadata.csv", header=0)
+    metadata['Sample ID Proteomics'] = metadata['Sample ID Proteomics'].astype('str')
+    metadata['Sample ID Proteomics'] = 'S'+metadata['Sample ID Proteomics']
+    metadata['Immunophenoytpe']=metadata['Immunophenoytpe'].astype('str')
+    metadata.drop(metadata[metadata['Sample ID Proteomics'] == 'S126'].index, inplace=True) #dropping the contaminated sample
+    metadata.loc[metadata['Immunophenoytpe'].isin(['T-ALL', 'T-ALL ', 'T-LBL/T-ALL']), 'Immunophenoytpe'] = 'T-ALL'
+    metadata.loc[metadata['Sample ID Proteomics']=='S108', 'Diagnosis/Relapse'] = 'Diagnosis' #information collected from protein expression data
+    
+    drug_df = drug_protein_df.reset_index()
+    joined_df = metadata.merge(drug_df, how='inner', left_on='Sample ID Proteomics', right_on='Sample_ID')
+    
+    B_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe']== 'B-ALL', ['Sample ID Proteomics', 'Diagnosis/Relapse']]
+    T_ALL_samples = joined_df.loc[joined_df['Immunophenoytpe'] == 'T-ALL', ['Sample ID Proteomics', 'Diagnosis/Relapse']]
+    
+    #Loading the protein data
+    #protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
+    #protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
+    protein = st.secrets["data_links"]["protein"]
+
+    #Download the file
+    response = requests.get(protein)
+    if response.status_code == 200:
+        with open("protein.csv", "wb") as f:
+            f.write(response.content)
+    
+    #Read the file
+    protein = pd.read_csv("protein.csv", index_col=0)
+    
+    protein = protein.iloc[5:,:]
+    protein_copy = protein.copy()
+    protein.index = protein['Protein ID']
+    #protein.head()
+    protein2gene_mapping = protein_copy[['Protein ID', 'Gene']]
+    T_ALL_protein_df = protein[protein.columns.intersection(T_ALL_samples['Sample ID Proteomics'])].T
+    B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Sample ID Proteomics'])].T
+    
+    return [drug_protein_df, T_ALL_protein_df, B_ALL_protein_df]
+
+    
+def mapping_Transcriptomics_DRP_to_metadata(drugOfInterest):
+    drp_data_url = st.secrets["data_links"]["drp_data"]
+    #Download the file
+    response = requests.get(drp_data_url)
+    if response.status_code == 200:
+        with open("drp.csv", "wb") as f:
+            f.write(response.content)
+    #Read the file
+    drp = pd.read_csv("drp.csv")
+    drp['Labeling proteomics'] = drp['Labeling proteomics'].astype(str)
+    drp.loc[:, 'Labeling proteomics'] = 'S' + drp['Labeling proteomics']
+    #Removing rows corresponding to the contaminated sample '126'
+    drp = drp.loc[drp['Labeling proteomics']!='S126']
+    drp.drop(columns=['sample_id'], inplace=True)
+    drug_protein_df = create_groups(drp, drugOfInterest)
+    drug_protein_df.index.names = ['Sample_ID']
+    
+    #Loading clinical metadata
+    clinical_metadata_url = st.secrets["data_links"]["clinical_metadata"]
+    #Download the file
+    response = requests.get(clinical_metadata_url)
+    if response.status_code == 200:
+        with open("metadata.csv", "wb") as f:
+            f.write(response.content)
+    #Read the file
+    metadata = pd.read_csv("metadata.csv", header=0)
+    
     drug_df = drug_protein_df.reset_index()
     joined_df = metadata.merge(drug_df, how='inner', left_on='Protein_Sample_ID', right_on='Sample_ID')
     
@@ -99,10 +156,11 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     
     #Loading the protein data
     #protein_vsn_url = st.secrets["data_links"]["protein_vsn"]
-    protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
+    #protein_no_vsn_url = st.secrets["data_links"]["protein_no_vsn"]
+    protein = st.secrets["data_links"]["protein"]
 
     #Download the file
-    response = requests.get(protein_no_vsn_url)
+    response = requests.get(protein)
     if response.status_code == 200:
         with open("protein.csv", "wb") as f:
             f.write(response.content)
@@ -110,10 +168,13 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
     #Read the file
     protein = pd.read_csv("protein.csv", index_col=0)
     
-    #protein = protein.iloc[5:,:]
+    protein = protein.iloc[5:,:]
+    protein_copy = protein.copy()
+    protein.index = protein['Protein ID']
+    #protein.head()
     T_ALL_protein_df = protein[protein.columns.intersection(T_ALL_samples['Protein_Sample_ID'])].T
     B_ALL_protein_df = protein[protein.columns.intersection(B_ALL_samples['Protein_Sample_ID'])].T
-
+    
     #Loading Transcriptomics data
     rna_url = st.secrets["data_links"]["rna"]
     #Download the file
@@ -123,16 +184,12 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
             f.write(response.content)
     #Read the file
     rna = pd.read_csv("rna.csv", index_col=0)
-    #st.dataframe(rna)
-    #st.write(B_ALL_samples['RNA_Sample_ID_Available'])
-    #st.write(rna.index)
     B_ALL_rna_df = rna.loc[B_ALL_samples['RNA_Sample_ID_Available']]
     T_ALL_rna_df = rna.loc[T_ALL_samples['RNA_Sample_ID_Available']]
     
     drug_rna_df = joined_df
     drug_rna_df.index = drug_rna_df['RNA_Sample_ID_Available']
     drug_rna_df.index.names = ['Sample_ID']
-    #print(drug_rna_df.columns)
     drug_rna_df.drop(columns=['Sample_ID_Submitted', 'RNA_Sample_ID_Available',
        'Duplicate_RNA_Sample_Available?', 'Protein_Sample_ID', 'WES_Sample_ID',
        'Immunophenoytpe', 'Diagnosis/Relapse', 'Sex', 'Age', 'ZNS',
@@ -141,15 +198,85 @@ def mapping_omicsandDRP2metadata(drugOfInterest):
        'Sample_ID'], inplace=True)
     return [drug_rna_df, drug_protein_df, T_ALL_rna_df, T_ALL_protein_df, B_ALL_rna_df, B_ALL_protein_df]
 
-# Feature Selection
+
+
+def selectFeaturesByWilcoxon(X, y, alpha, exp_name):
+    from scipy.stats import ranksums
+    from statsmodels.stats.multitest import multipletests
+    # Ensure y is a pandas Series
+    y = pd.Series(y, name="Target", index=X.index)
+
+    # Check and align X and y
+    if not X.index.equals(y.index):
+        raise ValueError("Indices of X and y do not match. Align them before running this function.")
+
+    # Prepare result storage
+    results = []
+
+    # Perform Wilcoxon rank-sum test for each feature
+    for feature in X.columns:
+        group_0 = X.loc[y == 0, feature]  # Resistant group
+        group_1 = X.loc[y == 1, feature]  # Sensitive group
+        
+        # Check if there are enough data points in both groups
+        if len(group_0) > 1 and len(group_1) > 1:
+            stat, p_value = ranksums(group_0, group_1)
+            results.append((feature, stat, p_value))
+        else:
+            results.append((feature, np.nan, np.nan))  # Append NaN if test cannot be run
+
+    # Convert results to DataFrame
+    results_df = pd.DataFrame(results, columns=["Feature", "Statistic", "P_Value"])
+
+    # Adjust p-values for multiple testing
+    results_df["Adjusted_P_Value"] = multipletests(results_df["P_Value"], method="fdr_bh")[1]
+
+    # Select features with significant adjusted p-values
+    significant_features = results_df[results_df["P_Value"] <= alpha]['Feature'].tolist()
+
+    # Save results to CSV
+    output_path = os.path.join("Results", f"{exp_name}_wilcoxon_test_results.csv")
+    #os.makedirs("Results", exist_ok=True)  # Ensure directory exists
+    results_df.to_csv(output_path, index=False)
+
+    return significant_features
+
+
 def preSelectFeatures(X, y, threshold, exp_name):
-    import os
-    X['Target'] = y
-    corr_mat = pd.DataFrame(X.corr()['Target'])
-    #pd.DataFrame(corr_mat).to_csv(os.path.join(dir,'Results/')+exp_name+'_correlation_with_target_DRP.csv')
-    features = corr_mat.index[abs(corr_mat['Target']) >= threshold].tolist()   #consider both positive and negative correlations >=0.3 and <=-0.3
-    #print(features)
-    return features[:-1]
+    # Ensure y is a pandas Series
+    y = pd.Series(y, name="Target", index=X.index)
+
+    # Check and handle issues in X and y
+    if not X.index.equals(pd.Index(y.index)):
+        raise ValueError("Indices of X and y do not match. Align them before running this function.")
+
+    # Drop non-numeric or constant columns
+    X = X.apply(pd.to_numeric, errors="coerce").loc[:, X.nunique() > 1]
+
+    # Drop rows with NaN in X or y
+    X = X.dropna()
+    y = y.loc[X.index]
+
+    # Compute correlation of each feature with the target
+    corr_mat = X.corrwith(y)
+
+    # Create a DataFrame to save correlations
+    corr_df = corr_mat.reset_index()
+    corr_df.columns = ["Feature", "Correlation"]
+    #print(corr_df)
+    
+    # Ensure 'Correlation' column is numeric and drop NaNs
+    corr_df["Correlation"] = pd.to_numeric(corr_df["Correlation"], errors="coerce")
+    corr_df = corr_df.dropna(subset=["Correlation"])
+
+    # Save correlation matrix to CSV
+    output_path = os.path.join("Results", f"{exp_name}_correlation_with_target_DRP.csv")
+    corr_df.to_csv(output_path, index=False)
+
+    # Select features with absolute correlation above the threshold
+    selected_features = corr_df.loc[abs(corr_df["Correlation"]) >= threshold, "Feature"].tolist()
+    return selected_features
+
 
 def protein2gene(df, cols):
     protein2gene_url = st.secrets["data_links"]["proteinIDtoGene"]
@@ -160,8 +287,9 @@ def protein2gene(df, cols):
             f.write(response.content)
     #Read the file
     protein2gene_mapping = pd.read_csv("protein2gene.csv")
+    protein2gene_mapping['Protein.ID'] = protein2gene_mapping['Protein.ID'].str.strip()  #Strip whitespaces
+    cols = [col.strip() for col in cols] #Strip whitespaces
     genes = protein2gene_mapping.loc[protein2gene_mapping['Protein.ID'].isin(cols), 'Gene']
-    #print(genes)
     df = df[cols]
     df.columns = genes
     df.columns = df.columns.astype(str)
@@ -193,7 +321,6 @@ def evaluateClassifiers(X, y):
 
 def importancePlot(feat_imp, exp_name):
     import matplotlib.pyplot as plt
-    import os
     
     fig, ax = plt.subplots(figsize=(10,8))
     #feat_imp.plot.bar(yerr=std, ax=ax)
@@ -232,7 +359,7 @@ def majorityVoting(lof): #Input the list of features
     cnt=Counter()
     for x in lof:
         cnt+= Counter(x)
-    features = [k for k,v in dict(cnt).items() if v>=2] #selecting a feature if 2 or more classifiers agree
+    features = [k for k,v in dict(cnt).items() if v>2] #selecting a feature if 3 or more classifiers agree
     return features
 
 def selectFeatures(df, classifiers, exp_name, n):
@@ -318,7 +445,7 @@ def selectFeatures(df, classifiers, exp_name, n):
     #print(f"Average training accuracy: {np.mean(acc):.2f}")
     selFeatures = majorityVoting(feat_imp)
     return selFeatures[0:n]
-
+"""
 def classify(data, drug_data, exp_name, classifiers, num_features, threshold, omics_type):
     from sklearn.preprocessing import LabelEncoder
 
@@ -366,8 +493,78 @@ def classify(data, drug_data, exp_name, classifiers, num_features, threshold, om
     X['Drug_Class']=labels
     #X.to_csv(os.path.join(dir,'Results/')+exp_name+'DRP_ML_selFeatures_with_annotations.csv')
     return selFeatures
+"""
+def classify_proteomics(data, drug_data, exp_name, drugOfInterest, classifiers, num_features, threshold):
+    from sklearn.preprocessing import LabelEncoder
+    drug_data = drug_data.loc[data.index] #select samples based on data i.e., (T-ALL or B-ALL)
+    #print(drug_data.shape)
+    drug_data = drug_data.loc[drug_data['Class']!='Intermediate'] #filter out all sample with 'Intermediate' class
+    data = data.loc[drug_data.index] #filter out samples corresponding to the 'Intermediate' class from the data
+    labels = drug_data['Class']
+    
+    le = LabelEncoder()
+    y = le.fit_transform(labels)
+    cols = data.columns.astype(str)
+    samples = data.index
+    X = pd.DataFrame(np.array(data, dtype=float))
+    
+    X.columns = cols
+    X.index = samples
 
-omics_type = st.selectbox('Select omics-type: ', ['Proteomics', 'Transcriptomics'])
+    #preselect features based on correlation with target variable from entire protein expression data
+    #feat = preSelectFeatures(X, y, threshold, exp_name)
+    #print('{} proteins were found to have significant positive or negative correlation with the annotations.'.format(len(feat)))
+    feat = selectFeaturesByWilcoxon(X, y, threshold, exp_name)
+    print('{} proteins were found to be differentially expressed between the two groups.'.format(len(feat)))
+    X = X[feat]
+    #print('{} proteins were found to have significant positive or negative correlation with the annotations.'.format(len(feat)))
+    X = protein2gene(X, X.columns)
+    #X = protein2gene(X, X.columns, protein2gene_mapping)
+    #evaluateClassifiers(X,y)
+    selFeatures = selectFeatures([X,y], classifiers, exp_name, num_features)
+    X = X[selFeatures]
+    differentialPlot(X, labels.values, exp_name)
+    X['Drug_Class']=labels
+    #X.to_csv(os.path.join('Results/')+exp_name+'DRP_ML_selFeatures_with_annotations.csv')
+    return selFeatures
+
+def classify_transcriptomics(data, drug_data, exp_name, drugOfInterest, classifiers, num_features, threshold, preselect_choice):
+
+    drug_data = drug_data.loc[data.index] #select samples based on data i.e., (T-ALL or B-ALL)
+    #print(drug_data.shape)
+    drug_data = drug_data.loc[drug_data['Class']!='Intermediate'] #filter out all sample with 'Intermediate' class
+    data = data.loc[drug_data.index] #filter out samples corresponding to the 'Intermediate' class from the data
+    labels = drug_data['Class']
+    
+    le = LabelEncoder()
+    y = le.fit_transform(labels)
+    cols = data.columns.astype(str)
+    samples = data.index
+    X = pd.DataFrame(np.array(data, dtype=float))
+    
+    X.columns = cols
+    X.index = samples
+
+    if preselect_choice == 'Correlation':
+        #preselect features based on correlation with target variable from entire protein expression data
+        feat = preSelectFeatures(X, y, threshold, exp_name)
+        print('{} proteins were found to have significant positive or negative correlation with the annotations.'.format(len(feat)))
+    elif preselect_choice == 'Wilcoxon':
+        #preselect features based on non-parametric test (Wilcoxon)
+        feat = selectFeaturesByWilcoxon(X, y, threshold, exp_name)
+        print('{} proteins were found to be differentially expressed between the two groups.'.format(len(feat)))
+    X = X[feat]
+    #X = protein2gene(X, X.columns)
+    #X = protein2gene(X, X.columns, protein2gene_mapping)
+    #evaluateClassifiers(X,y)
+    selFeatures = selectFeatures([X,y], classifiers, exp_name, num_features)
+    X = X[selFeatures]
+    differentialPlot(X, labels.values, exp_name)
+    X['Drug_Class']=labels
+    #X.to_csv(os.path.join('Results/')+exp_name+'DRP_ML_selFeatures_with_annotations.csv')
+    return selFeatures
+
+
 
 #if omics_type=='Transcriptomics':
 #    uploaded_file = st.file_uploader("Upload transcriptomics data")
@@ -382,11 +579,13 @@ omics_type = st.selectbox('Select omics-type: ', ['Proteomics', 'Transcriptomics
 #        protein = protein.iloc[5:,:]
 #        st.write("Uploaded proteomics data:")
 #        st.dataframe(protein)
-    
+
+omics_type = st.selectbox('Select omics-type: ', ['Proteomics', 'Transcriptomics'])
 cell_type = st.selectbox('Select cell-type: ', ['T-ALL', 'B-ALL'])
 drugs_of_interest = ['Idarubicin', 'Dasatinib', 'Ponatinib', 'Venetoclax', 'Navitoclax', 'Doxorubicin', 'Birinapant', 'Bortezomib', 'CB-103', 'Dexamethasone', 'Cytarabine', 'Etoposide', 'Methotrexate', 'Selinexor', 'Vincristine', 'Nilotinib', 'Temsirolimus', 'Bosutinib', 'Panobinostat', 'Trametinib', 'Ruxolitinib', 'Dinaciclib', 'A1331852', 'S-63845', 'Nelarabine']
 drugOfInterest = st.selectbox('Select drug', options=[opt.strip() for opt in drugs_of_interest])
 num_features = st.slider('Select number of genes you want to select',1, 100, 50)
+preselect_choice = st.selectbox('Select choice for dimension reduction: ', ['Wilcoxon', 'Correlation'])
 threshold = st.slider('Select threshold for correlation-based feature pre-selection', 0.00, 1.00, 0.55) #threshold for correlation-based preselection
 classifiers = st.multiselect('Select models - You may choose multiple among the following: [Logistic Regression, Decision Tree Classifier, Random Forest Classifier, Support Vector Machine Classifer, XG Boost Classifier and Lasso Regression]', ['LR', 'DT', 'RF', 'SVC', 'XGB', 'Lasso'])
 #st.write(classifiers)
@@ -395,7 +594,43 @@ classifiers = st.multiselect('Select models - You may choose multiple among the 
 #else:
     #st.warning("Please upload a file to proceed!")
 
-data = mapping_omicsandDRP2metadata(drugOfInterest)
+if omics_type == 'Proteomics':
+    data = mapping_Proteomics_DRP_to_metadata(drugOfInterest)
+    if cell_type == 'T-ALL':
+        drug_protein_df = data[1]
+    elif cell_type == 'B-ALL':
+        drug_protein_df = data[2]
+    drug_data = data[0]
+    analyze = st.button('Analyze', on_click=set_stage, args=(1,))
+    if analyze:
+        if len(classifiers) < 2:
+            st.write('Please select at least 2 classifiers')
+        else:
+            #st.write(st.session_state)
+            exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
+            selFeatures = classify_proteomics(drug_protein_df, drug_data, exp_name, drugOfInterest, classifiers, num_features, threshold)
+
+elif omics_type == 'Transcriptomics':
+    data = mapping_Transcriptomics_DRP_to_metadata(drugOfInterest)
+    drug_data = data[0]
+    if cell_type == 'T-ALL':
+        data = data[2]
+    elif cell_type == 'B-ALL':
+        data = data[4]
+    preselect_choice = 'Wilcoxon'
+    analyze = st.button('Analyze', on_click=set_stage, args=(1,))
+    if analyze:
+        if len(classifiers) < 2:
+            st.write('Please select at least 2 classifiers')
+        else:
+            #st.write(st.session_state)
+            exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
+            selFeatures = classify_transcriptomics(data, drug_data, exp_name, drugOfInterest, classifiers, num_features, threshold, preselect_choice)
+    
+"""    
+elif omics_type == 'Transcriptomics':
+
+data = mapping_Proteomics_DRP_to_metadata(drugOfInterest)
     
 if omics_type == 'Transcriptomics':
     drug_data = data[0]
@@ -412,7 +647,7 @@ elif cell_type == 'B-ALL':
         data = data[4]
     elif omics_type == 'Proteomics':
         data = data[5]
-    
+ 
 analyze = st.button('Analyze', on_click=set_stage, args=(1,))
 if analyze:
     if len(classifiers) < 2:
@@ -421,3 +656,4 @@ if analyze:
         #st.write(st.session_state)
         exp_name = cell_type+'_'+omics_type+'_'+drugOfInterest+'_'
         selFeatures = classify(data, drug_data, exp_name, classifiers, num_features, threshold, omics_type)
+"""
