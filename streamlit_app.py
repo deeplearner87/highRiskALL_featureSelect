@@ -96,14 +96,8 @@ def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
     else:
             st.write(f"Failed to download file. Status code: {response.status_code}")
     
-    
-    """
-    try:
-        metadata = pd.read_excel("metadata.xlsx", engine="openpyxl")
-        st.write(metadata.head())  # Print first few rows to confirm it's loaded
-    except Exception as e:
-        st.write(f"Error reading Excel file: {e}")
-    """
+    #Read the file
+    metadata = pd.read_csv("metadata.csv", header=0)
     metadata['Sample ID Proteomics'] = metadata['Sample ID Proteomics'].astype('str')
     metadata['Sample ID Proteomics'] = 'S'+metadata['Sample ID Proteomics']
     metadata['Immunophenoytpe']=metadata['Immunophenoytpe'].astype('str')
