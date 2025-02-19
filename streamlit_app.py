@@ -82,7 +82,7 @@ def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
         with open("metadata.csv", "wb") as f:
             f.write(response.content)
     #Read the file
-    metadata = pd.read_csv("metadata.csv", header=0)
+    metadata = pd.read_csv("metadata.csv", delimiter=";", header=0)
     metadata['Sample ID Proteomics'] = metadata['Sample ID Proteomics'].astype('str')
     metadata['Sample ID Proteomics'] = 'S'+metadata['Sample ID Proteomics']
     metadata['Immunophenoytpe']=metadata['Immunophenoytpe'].astype('str')
