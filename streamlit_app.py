@@ -82,7 +82,7 @@ def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
         with open("metadata.csv", "wb") as f:
             f.write(response.content)
     #Read the file
-    metadata = pd.read_csv("metadata.csv", header=0)
+    metadata = pd.read_csv("metadata.csv", header=0, sep=';')
     """
     try:
         metadata = pd.read_excel("metadata.xlsx", engine="openpyxl")
@@ -115,7 +115,7 @@ def mapping_Proteomics_DRP_to_metadata(drugOfInterest):
             f.write(response.content)
     
     #Read the file
-    protein = pd.read_csv("protein.csv", index_col=0)
+    protein = pd.read_csv("protein.csv", header=0, sep='\t')
     
     protein = protein.iloc[5:,:]
     protein_copy = protein.copy()
@@ -173,7 +173,7 @@ def mapping_Transcriptomics_DRP_to_metadata(drugOfInterest):
             f.write(response.content)
     
     #Read the file
-    protein = pd.read_csv("protein.csv", index_col=0)
+    protein = pd.read_csv("protein.csv", header=0, sep='\t')
     
     protein = protein.iloc[5:,:]
     protein_copy = protein.copy()
